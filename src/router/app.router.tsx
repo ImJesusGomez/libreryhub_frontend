@@ -5,7 +5,11 @@ import { createBrowserRouter, Navigate } from "react-router";
 
 export const router = createBrowserRouter([
   {
-    path: "auth",
+    path: "/",
+    element: <Navigate to={"/login"} />,
+  },
+  {
+    path: "/",
     element: <AuthLayout />,
     children: [
       {
@@ -20,6 +24,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to={"/auth/login"} />,
+    element: <Navigate to={"/login"} />,
   },
 ]);
