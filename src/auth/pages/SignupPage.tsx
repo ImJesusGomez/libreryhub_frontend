@@ -5,27 +5,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
+import type { SignupInput } from "../actions/signup.action";
+import { FieldError } from "@/components/ui/field";
+import { useSignup } from "../hooks/useSignup";
+
+type SignupInputForm = SignupInput & { confirmPassword: string };
 
 export const SignupPage = () => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isLoading },
+  } = useForm<SignupInputForm>();
+
+  const password = useWatch({
+    control,
+    name: "password",
   });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading] = useState(false);
+  const signupMutation = useSignup();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+  const onSubmit = async (data: SignupInputForm) => {
+    try {
+      await signupMutation.mutateAsync({
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        password: data.password,
+        phoneNumber: data.phoneNumber,
+        roles: ["ROLE_EMPLOYEE"],
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
-
-  const handleSubmit = async () => {};
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -89,7 +105,7 @@ export const SignupPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-foreground">
@@ -99,14 +115,25 @@ export const SignupPage = () => {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       id="firstName"
-                      name="firstName"
                       placeholder="Juan"
-                      value={formData.firstName}
-                      onChange={handleChange}
                       className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                      required
+                      {...register("firstName", {
+                        required: {
+                          message: "Nombre es obligatorio.",
+                          value: true,
+                        },
+                        minLength: {
+                          message: "Debe contener más de 1 carácter.",
+                          value: 1,
+                        },
+                        maxLength: {
+                          message: "Debe contener menos de 100 carácteres.",
+                          value: 100,
+                        },
+                      })}
                     />
                   </div>
+                  {errors.firstName && <FieldError>{errors.firstName.message}</FieldError>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName" className="text-foreground">
@@ -114,13 +141,24 @@ export const SignupPage = () => {
                   </Label>
                   <Input
                     id="lastName"
-                    name="lastName"
                     placeholder="Pérez"
-                    value={formData.lastName}
-                    onChange={handleChange}
                     className="bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("lastName", {
+                      required: {
+                        message: "Apellido es obligatorio.",
+                        value: true,
+                      },
+                      minLength: {
+                        message: "Debe contener más de 1 carácter.",
+                        value: 1,
+                      },
+                      maxLength: {
+                        message: "Debe contener menos de 100 carácteres.",
+                        value: 100,
+                      },
+                    })}
                   />
+                  {errors.lastName && <FieldError>{errors.lastName.message}</FieldError>}
                 </div>
               </div>
 
@@ -132,15 +170,22 @@ export const SignupPage = () => {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
                     id="email"
-                    name="email"
                     type="email"
                     placeholder="empleado@libreria.com"
-                    value={formData.email}
-                    onChange={handleChange}
                     className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("email", {
+                      required: {
+                        message: "Correo Electrónico es obligatorio.",
+                        value: true,
+                      },
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Correo electrónico inválido.",
+                      },
+                    })}
                   />
                 </div>
+                {errors.email && <FieldError>{errors.email.message}</FieldError>}
               </div>
 
               <div className="space-y-2">
@@ -151,15 +196,18 @@ export const SignupPage = () => {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
                     id="phoneNumber"
-                    name="phoneNumber"
                     type="tel"
                     placeholder="+52 555 123 4567"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
                     className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("phoneNumber", {
+                      required: {
+                        message: "Número teléfonico es obligatorio.",
+                        value: true,
+                      },
+                    })}
                   />
                 </div>
+                {errors.phoneNumber && <FieldError>{errors.phoneNumber.message}</FieldError>}
               </div>
 
               <div className="space-y-2">
@@ -170,13 +218,15 @@ export const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
                     className="pl-10 pr-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("password", {
+                      required: {
+                        value: true,
+                        message: "Contraseña es requerida",
+                      },
+                    })}
                   />
                   <button
                     type="button"
@@ -186,6 +236,7 @@ export const SignupPage = () => {
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
+                {errors.password && <FieldError>{errors.password.message}</FieldError>}
               </div>
 
               <div className="space-y-2">
@@ -196,15 +247,21 @@ export const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
                     className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("confirmPassword", {
+                      required: {
+                        value: true,
+                        message: "Debes confirmar la contraseña",
+                      },
+                      validate: (value) => value === password || "Las contraseñas no coinciden.",
+                    })}
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <FieldError>{errors.confirmPassword.message}</FieldError>
+                )}
               </div>
 
               <Button

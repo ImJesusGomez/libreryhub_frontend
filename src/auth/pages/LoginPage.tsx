@@ -5,13 +5,29 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Link } from "react-router";
+import { useForm } from "react-hook-form";
+import type { LoginInput } from "../actions/login.action";
+import { FieldError } from "@/components/ui/field";
+import { useLogin } from "../hooks/useLogin";
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isLoading },
+  } = useForm<LoginInput>();
+
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async () => {};
+  const loginMutation = useLogin();
+
+  const onSubmit = async (input: LoginInput) => {
+    try {
+      loginMutation.mutateAsync(input);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -55,7 +71,7 @@ export const LoginPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground">
                   Correo electrónico
@@ -66,12 +82,16 @@ export const LoginPage = () => {
                     id="email"
                     type="email"
                     placeholder="empleado@libreria.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("email", {
+                      required: {
+                        message: "Correo Electrónico es obligatorio.",
+                        value: true,
+                      },
+                    })}
                   />
                 </div>
+                {errors.email && <FieldError>{errors.email.message}</FieldError>}
               </div>
 
               <div className="space-y-2">
@@ -84,10 +104,13 @@ export const LoginPage = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
-                    required
+                    {...register("password", {
+                      required: {
+                        message: "Contraseña es obligatoria.",
+                        value: true,
+                      },
+                    })}
                   />
                   <button
                     type="button"
@@ -97,15 +120,15 @@ export const LoginPage = () => {
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
+                {errors.password && <FieldError>{errors.password.message}</FieldError>}
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                // disabled={isLoading}
+                disabled={isLoading}
               >
-                {/* {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"} */}
-                Iniciar Sesión
+                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Button>
             </form>
 
